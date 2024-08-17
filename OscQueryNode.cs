@@ -123,12 +123,12 @@ namespace Vrc.OscQuery
             get
             {
                 var length = Math.Max(1, FullPath.LastIndexOf('/'));
-                return FullPath[..length];
+                return FullPath.Substring(0, length);
             }
         }
         
         [JsonIgnore]
-        public string Name => FullPath[(FullPath.LastIndexOf('/')+1)..];
+        public string Name => FullPath.Substring(FullPath.LastIndexOf('/')+1);
 
         public string ToJson()
         {

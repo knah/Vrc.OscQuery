@@ -35,7 +35,7 @@ namespace Vrc.OscQuery
         {
             if (myHttp != null)
                 throw new InvalidOperationException($"HTTP server is already running on port {TcpPort}");
-            ArgumentOutOfRangeException.ThrowIfGreaterThan(portNumber, ushort.MaxValue);
+            FrameworkCompat.ThrowIfGreaterThan(portNumber, ushort.MaxValue);
 
             TcpPort = portNumber <= 0 ? Utils.GetAvailableTcpPort() : portNumber;
             myHttp = new OscQueryHttpServer(this, Logger);

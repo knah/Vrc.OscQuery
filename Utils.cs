@@ -30,7 +30,7 @@ namespace Vrc.OscQuery
         {
             if (string.IsNullOrEmpty(address))
                 address = "/";
-            var response = await Client.GetAsync($"http://{ip}:{port}{(address.StartsWith("/") ? "" : "/")}{address}", cancellationToken);
+            var response = await Client.GetAsync($"http://{ip}:{port}{(address!.StartsWith("/") ? "" : "/")}{address}", cancellationToken);
             if (!response.IsSuccessStatusCode)
                 return null;
 
