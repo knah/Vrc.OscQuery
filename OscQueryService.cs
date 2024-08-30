@@ -73,23 +73,17 @@ namespace Vrc.OscQuery
         {
             Discovery.RefreshServices();
         }
-
-        public void SetValue(string address, string value)
-        {
-            var target = RootNode.GetNodeWithPath(address) ?? RootNode.AddNode(new OscQueryNode(address));
-            target.Value = new object[] { value };
-        }
         
-        public void SetValue(string address, object[] value)
+        public void SetValue(string address, params object[] value)
         {
             var target = RootNode.GetNodeWithPath(address) ?? RootNode.AddNode(new OscQueryNode(address));
             target.Value = value;
         }
 
         public OscQueryService WithEndpoint(string path, string oscTypeString, Attributes.AccessValues accessValues,
-            object[]? initialValue = null, string description = "")
+            object[]? initialValue = null, string description = "", Func<OscQueryNode, object[]?>? getter = null)
         {
-            AddEndpoint(path, oscTypeString, accessValues, initialValue, description);
+            AddEndpoint(path, oscTypeString, accessValues, initialValue, description, getter);
             return this;
         }
 
@@ -101,41 +95,52 @@ namespace Vrc.OscQuery
         /// <param name="accessValues">Enum - 0: NoValue, 1: ReadOnly 2:WriteOnly 3:ReadWrite</param>
         /// <param name="initialValue">Starting value for param in string form</param>
         /// <param name="description">Optional longer string to use when displaying a label for the entry</param>
-        /// <returns></returns>
-        public bool AddEndpoint(string path, string oscTypeString, Attributes.AccessValues accessValues, object[]? initialValue = null, string description = "")
+        /// <param name="getter">A delegate that will be called to get node value on each serialization (request)</param>
+        /// <returns>The newly added node, or null on error, including node with a given path already existing</returns>
+        public OscQueryNode? AddEndpoint(string path, string oscTypeString, Attributes.AccessValues accessValues,
+            object[]? initialValue = null, string? description = null, Func<OscQueryNode, object[]?>? getter = null)
         {
             // Exit early if path does not start with slash
             if (!path.StartsWith("/"))
             {
                 Logger.LogError($"An OSC path must start with a '/', your path {path} does not.");
-                return false;
+                return null;
             }
             
             if (RootNode.GetNodeWithPath(path) != null)
             {
                 Logger.LogWarning($"Path already exists, skipping: {path}");
-                return false;
+                return null;
             }
             
-            RootNode.AddNode(new OscQueryNode(path)
+            return RootNode.AddNode(new OscQueryNode(path)
             {
                 Access = accessValues,
                 Description = description,
                 OscType = oscTypeString,
-                Value = initialValue
+                Value = initialValue,
+                ValueGetter = getter,
             });
-            
-            return true;
         }
         
-        public bool AddEndpoint<T>(string path, Attributes.AccessValues accessValues, object[]? initialValue = null, string description = "")
+        public OscQueryNode? AddEndpoint<T>(string path, Attributes.AccessValues accessValues, T? initialValue = null, string? description = "", Func<OscQueryNode, T>? getter = null) where T: struct
         {
             var typeExists = Attributes.OscTypeFor(typeof(T), out var oscType);
 
-            if (typeExists) return AddEndpoint(path, oscType, accessValues, initialValue, description);
+            if (typeExists) return AddEndpoint(path, oscType, accessValues, initialValue.HasValue ? [initialValue.Value] : null, description, getter == null ? null : n => [getter(n)]);
             
             Logger.LogError($"Could not add {path} to OSCQueryService because type {typeof(T)} is not supported.");
-            return false;
+            return null;
+        }
+
+        public OscQueryNode? AddEndpoint<T>(string path, Attributes.AccessValues accessValues, T? initialValue = null, string? description = "", Func<OscQueryNode, T>? getter = null) where T : class
+        {
+            var typeExists = Attributes.OscTypeFor(typeof(T), out var oscType);
+
+            if (typeExists) return AddEndpoint(path, oscType, accessValues, initialValue != null ? [initialValue] : null, description, getter == null ? null : n => [getter(n)]);
+            
+            Logger.LogError($"Could not add {path} to OSCQueryService because type {typeof(T)} is not supported.");
+            return null;
         }
 
         /// <summary>

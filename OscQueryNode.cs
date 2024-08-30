@@ -111,9 +111,17 @@ namespace Vrc.OscQuery
         
         [JsonPropertyName(Attributes.TYPE)]
         public string? OscType;
-        
+
+        private object[]? myValue;
         [JsonPropertyName(Attributes.VALUE)]
-        public object[]? Value;
+        public object[]? Value
+        {
+            get => ValueGetter != null ? ValueGetter(this) : myValue;
+            set => myValue = value;
+        }
+
+        [JsonIgnore]
+        public Func<OscQueryNode, object[]?>? ValueGetter;
 
         [JsonPropertyName(Attributes.RANGE)]
         public OscRange[]? Range;
