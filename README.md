@@ -1,10 +1,10 @@
 # Vrc.OscQuery
 This is a fork of VRChat's [vrc-oscquery-lib](https://github.com/vrchat-community/vrc-oscquery-lib) (MIT license), with the following changes:
 * Removed everything Unity-related, because...
-* Upgraded to net8 and netstandard as the only target frameworks.
-* The netstandard2 build may work in Unity as a dll, but will likely fail to compile due to using newer C# language version.
+* Upgraded to net9 and netstandard as the only target frameworks.
+* The netstandard2 build may work in Unity as a dll, but will likely fail to compile due to using a newer C# language version.
 * Replaced `Newtonsoft.Json` with `System.Text.Json` for better AOT compatibility.
-* Replaced `HttpListener` with `Ceen.Httpd`, which allows to bind to non-localhost adapters.
+* Replaced `HttpListener` with `Ceen.Httpd`, which allows binding to non-localhost adapters.
 * `Ceen.Httpd` is also cross-platform, which is not a given for `HttpListener`
 * Added support for OSCQuery `path?ATTRIBUTE` queries for most attributes.
 * Added support for OSCQuery `RANGE` attribute.
