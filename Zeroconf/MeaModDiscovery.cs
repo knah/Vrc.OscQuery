@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using MeaMod.DNS.Model;
 using MeaMod.DNS.Multicast;
 using Microsoft.Extensions.Logging;
@@ -60,6 +61,25 @@ namespace Vrc.OscQuery.Zeroconf
             // Callback invoked when the above query is answered
             _mdns.AnswerReceived += OnRemoteServiceInfo;
             _mdns.Start();
+
+            RefreshLoop().ContinueWith(task =>
+            {
+                if (task.IsFaulted)
+                    Logger.LogError(task.Exception, "mDNS refresh loop failed with exception in MeaModDiscovery");
+            });
+        }
+
+        private async Task RefreshLoop()
+        {
+            while (!_expiryTokenWorkerSource.IsCancellationRequested)
+            {
+                foreach (var (_, value) in _profiles) 
+                    _discovery.Announce(value);
+                RefreshServices();
+                
+                // max expiry is 1 minute, so query twice as often
+                await Task.Delay(TimeSpan.FromSeconds(30), _expiryTokenWorkerSource.Token);
+            }
         }
         
         public void RefreshServices()
@@ -113,6 +133,7 @@ namespace Vrc.OscQuery.Zeroconf
         {
             var meaProfile = new ServiceProfile(profile.Name, profile.GetServiceTypeString(), (ushort)profile.Port, new[] { profile.Address });
             _discovery.Advertise(meaProfile);
+            _discovery.Announce(meaProfile);
             
             if (_profiles.TryAdd(profile, meaProfile))
                 Logger.LogInformation("Advertising Service {Name} of type {Type} on {Port}", profile.Name,profile.Type, profile.Port);
