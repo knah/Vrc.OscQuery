@@ -32,6 +32,7 @@ namespace Vrc.OscQuery
             serverConfig.AddRoute($"/{Attributes.HOST_INFO}", HandleHostInfoNew);
             serverConfig.AddRoute("/*", new FileHandler(new EmbeddedResourcesVfs("Vrc.OscQuery.Resources")) { PassThrough = true, SourceFolder = "/" });
             serverConfig.AddRoute("/*", HandleRootNew);
+            serverConfig.KeepAliveMaxRequests = 1;
 
             HttpServer.ListenAsync(new IPEndPoint(myOscQuery.HostIp, myOscQuery.TcpPort), false, serverConfig, myTokenSource.Token);
             
