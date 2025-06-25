@@ -30,17 +30,17 @@ namespace Vrc.OscQuery
         {
             if (string.IsNullOrEmpty(address))
                 address = "/";
-            var response = await Client.GetAsync($"http://{ip}:{port}{(address!.StartsWith("/") ? "" : "/")}{address}", cancellationToken);
+            var response = await Client.GetAsync($"http://{ip}:{port}{(address!.StartsWith("/") ? "" : "/")}{address}", cancellationToken).ConfigureAwait(false);
             if (!response.IsSuccessStatusCode)
                 return null;
 
-            return await OscQueryRootNode.FromStreamAsync(await response.Content.ReadAsStreamAsync(cancellationToken), cancellationToken);
+            return await OscQueryRootNode.FromStreamAsync(await response.Content.ReadAsStreamAsync(cancellationToken), cancellationToken).ConfigureAwait(false);
         }
 
         public static async Task<HostInfo?> GetHostInfo(IPAddress address, int port, CancellationToken cancellationToken = default)
         {
-            var response = await Client.GetAsync($"http://{address}:{port}?{Attributes.HOST_INFO}", cancellationToken);
-            return await HostInfo.FromJsonAsync(await response.Content.ReadAsStreamAsync(cancellationToken), cancellationToken);
+            var response = await Client.GetAsync($"http://{address}:{port}?{Attributes.HOST_INFO}", cancellationToken).ConfigureAwait(false);
+            return await HostInfo.FromJsonAsync(await response.Content.ReadAsStreamAsync(cancellationToken), cancellationToken).ConfigureAwait(false);
         }
     }
 }

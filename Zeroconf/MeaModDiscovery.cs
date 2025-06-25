@@ -71,6 +71,8 @@ namespace Vrc.OscQuery.Zeroconf
 
         private async Task RefreshLoop()
         {
+            // force background scheduler
+            await Task.Delay(TimeSpan.FromSeconds(1)).ConfigureAwait(false);
             while (!_expiryTokenWorkerSource.IsCancellationRequested)
             {
                 foreach (var (_, value) in _profiles) 
@@ -78,7 +80,7 @@ namespace Vrc.OscQuery.Zeroconf
                 RefreshServices();
                 
                 // max expiry is 1 minute, so query twice as often
-                await Task.Delay(TimeSpan.FromSeconds(30), _expiryTokenWorkerSource.Token);
+                await Task.Delay(TimeSpan.FromSeconds(30), _expiryTokenWorkerSource.Token).ConfigureAwait(false);
             }
         }
         
